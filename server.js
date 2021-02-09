@@ -22,7 +22,7 @@ startApp = () => {
             name: 'initialInquiry',
             type: 'rawlist',
             message: 'What would you like to do?',
-            choices: ['View all employees', 'View all employees by department', 'View all employees by manager', 'View all departments', 'View all roles', 'Add an employee', 'Add a role', 'Add a department', 'Remove an employee', 'Remove a department', 'Remove a role', 'Update employee role', 'Update employee manager', 'View salary total of department']
+            choices: ['View all employees', 'View all employees by department', 'View all employees by manager', 'View all departments', 'View all roles', 'Add an employee', 'Add a role', 'Add a department', 'Remove an employee', 'Remove a department', 'Remove a role', 'Update employee role', 'Update employee manager', 'View salary total of department', 'Exit']
         }
     ]).then((answer) => {
         switch (answer.initialInquiry) {
@@ -68,11 +68,37 @@ startApp = () => {
             case 'View salary total of department':
                 viewSalaryTotal();
                 break;
+            case 'Exit':
+                return;
+                break;
             default:
                 console.log(`Invalid action: ${answer.initialInquiry}`);
                 break;   
         }
     })
+};
+
+viewEmployees = () => {
+    let query = `SELECT
+    employee.id,
+    employee.first_name,
+    employee.last_name,
+    role.title,
+    department.name,
+    role.salary,
+    employee.manager_id
+    FROM employee
+    JOIN role
+    ON employee.role_id = role.id
+    JOIN department
+    ON department.id = role.department_id
+    ORDER BY employee.id ASC;`;
+    connection.query(query, (err, res) => {
+        if (err) throw err;
+        console.table(res);
+        connection.end();
+    })
+    startApp();
 };
 
 // view all employees 

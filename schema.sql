@@ -29,8 +29,3 @@ CREATE TABLE employee (
     FOREIGN KEY (role_id) REFERENCES role(id),
     FOREIGN KEY (manager_id) REFERENCES employee(id)
 );
-
-SELECT name
-FROM department
-INNER JOIN role ON department.id = role.department_id,
-GROUP BY id;
