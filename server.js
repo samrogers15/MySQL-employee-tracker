@@ -20,7 +20,7 @@ startApp = () => {
     inquirer.prompt([
         {
             name: 'initialInquiry',
-            type: 'list',
+            type: 'rawlist',
             message: 'What would you like to do?',
             choices: ['View all employees', 'View all employees by department', 'View all employees by manager', 'View all departments', 'View all roles', 'Add an employee', 'Add a role', 'Add a department', 'Remove an employee', 'Remove a department', 'Remove a role', 'Update employee role', 'Update employee manager', 'View salary total of department', 'Exit']
         }
@@ -72,7 +72,6 @@ startApp = () => {
                 return;
                 break;
             default:
-                console.log(`Invalid action: ${answer.initialInquiry}`);
                 break;   
         }
     })
@@ -96,15 +95,15 @@ viewEmployees = () => {
     connection.query(query, (err, res) => {
         if (err) throw err;
         console.table(res);
+        connection.end();
     })
-    startApp();
 };
 
 viewEmployeesDept = () => {
     inquirer.prompt([
         {
             name: 'department',
-            type: 'list',
+            type: 'rawlist',
             message: 'Which department would you like to view the employees of?',
             choices: ['Sales', 'HR', 'IT']
         }
@@ -124,7 +123,7 @@ viewEmployeesDept = () => {
                     ON employee.role_id = role.id
                     JOIN department
                     ON department.id = role.department_id
-                    WHERE department.name = '${answer.department}'
+                    WHERE department.deptName = '${answer.department}'
                     ORDER BY employee.id ASC;`;
                     connection.query(query, (err, res) => {
                         if (err) throw err;
