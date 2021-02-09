@@ -198,24 +198,59 @@ viewRoles = () => {
 
 
 addEmployee = () => {
-    inquirer.prompt([
-        {
-            name: 'firstName',
-            type: 'input',
-            message: 'What is the new employee\'s first name?'
-        },
-        {
-            name: 'lastName',
-            type: 'input',
-            message: 'What is the new employee\'s last name?'
-        },
-        {
-            name: 'firstName',
-            type: 'input',
-            message: 'What is the new employee\'s first name?'
+    connection.query(`SELECT CONCAT(first_name, ' ', last_name) as manager FROM employee`, (err, res) => {
+        if (err) throw err;
+        let employees = [];
+        for (var i = 0; i < res.length; i++) {
+            employees.push(res[i].manager);
         }
-    ])
-}
+        inquirer.prompt([
+            {
+                name: 'firstName',
+                type: 'input',
+                message: 'What is the new employee\'s first name?'
+            },
+            {
+                name: 'lastName',
+                type: 'input',
+                message: 'What is the new employee\'s last name?'
+            },
+            {
+                name: 'title',
+                type: 'input',
+                message: 'What is the new employee\'s title?'
+            },
+            {
+                name: 'dept',
+                type: 'input',
+                message: 'What department is the new employee in?'
+            },
+            {
+                name: 'salary',
+                type: 'input',
+                message: 'What is the new employee\'s salary?'
+            },
+            {
+                name: 'manager',
+                type: 'rawlist',
+                message: 'Who is the new employee\'s manager?',
+                choices: employees
+            }
+        ]).then((answer) => {
+            connection.query(`INSERT INTO employee SET ?`,
+            {
+                first_name: answer.firstName,
+                last_name: answer.lastName,
+                
+
+            }
+            (err, res) => {
+
+            })
+        })
+    })
+};
+// first name, last name, title, deptName, salary, manager
 // add an employee
 // add a role
 // add a dept
