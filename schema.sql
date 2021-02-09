@@ -32,7 +32,5 @@ CREATE TABLE employee (
 
 SELECT name
 FROM department
-INNER JOIN role ON department.id = role.department_id
-
-
-id, first name, last name, title, department, salary, manager
+INNER JOIN role ON department.id = role.department_id,
+GROUP BY id;
