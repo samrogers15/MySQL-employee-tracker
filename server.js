@@ -96,46 +96,52 @@ viewEmployees = () => {
     connection.query(query, (err, res) => {
         if (err) throw err;
         console.table(res);
-        connection.end();
     })
 };
 
 viewEmployeesDept = () => {
-    inquirer.prompt([
-        {
-            name: 'department',
-            type: 'rawlist',
-            message: 'Which department would you like to view the employees of?',
-            choices: ['Sales', 'HR', 'IT']
+    connection.query(`SELECT deptName FROM department`, (err, res) => {
+        if (err) throw err;
+        let departments = [];
+        for (var i = 0; i < res.length; i++) {
+            departments.push(res[i].deptName);
         }
-    ]).then((answer) => {
-        switch (answer.department) {
-            case `${answer.department}`:
-                let query = `SELECT
-                    employee.id,
-                    employee.first_name,
-                    employee.last_name,
-                    role.title,
-                    department.deptName,
-                    role.salary,
-                    employee.manager_id
-                    FROM employee
-                    JOIN role
-                    ON employee.role_id = role.id
-                    JOIN department
-                    ON department.id = role.department_id
-                    WHERE department.deptName = '${answer.department}'
-                    ORDER BY employee.id ASC;`;
-                    connection.query(query, (err, res) => {
-                        if (err) throw err;
-                        console.table(res);
-                    })
-                break;
-            default:
-                break;
-        }
+        inquirer.prompt([
+            {
+                name: 'department',
+                type: 'rawlist',
+                message: 'Which department would you like to view the employees of?',
+                choices: departments
+            }
+        ]).then((answer) => {
+            switch (answer.department) {
+                case `${answer.department}`:
+                    let query = `SELECT
+                        employee.id,
+                        employee.first_name,
+                        employee.last_name,
+                        role.title,
+                        department.deptName,
+                        role.salary,
+                        employee.manager_id
+                        FROM employee
+                        JOIN role
+                        ON employee.role_id = role.id
+                        JOIN department
+                        ON department.id = role.department_id
+                        WHERE department.deptName = '${answer.department}'
+                        ORDER BY employee.id ASC;`;
+                        connection.query(query, (err, res) => {
+                            if (err) throw err;
+                            console.table(res);
+                        })
+                    break;
+                default:
+                    break;
+            }
+        })
     })
-}
+};
 
 viewEmployeesManager = () => {
     inquirer.prompt([
@@ -172,7 +178,7 @@ viewEmployeesManager = () => {
                 break;
         }
     })
-}
+};
 
 viewDepartments = () => {
     let query = `SELECT * FROM department ORDER BY id ASC;`;
@@ -180,7 +186,7 @@ viewDepartments = () => {
         if (err) throw err;
         console.table(res);
     })
-}
+};
 
 viewRoles = () => {
     let query = `SELECT id, title FROM role ORDER BY id ASC;`;
@@ -188,10 +194,28 @@ viewRoles = () => {
         if (err) throw err;
         console.table(res);
     })
+};
+
+
+addEmployee = () => {
+    inquirer.prompt([
+        {
+            name: 'firstName',
+            type: 'input',
+            message: 'What is the new employee\'s first name?'
+        },
+        {
+            name: 'lastName',
+            type: 'input',
+            message: 'What is the new employee\'s last name?'
+        },
+        {
+            name: 'firstName',
+            type: 'input',
+            message: 'What is the new employee\'s first name?'
+        }
+    ])
 }
-
-
-// view all roles
 // add an employee
 // add a role
 // add a dept
