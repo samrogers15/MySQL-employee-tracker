@@ -20,7 +20,7 @@ startApp = () => {
     inquirer.prompt([
         {
             name: 'initialInquiry',
-            type: 'rawlist',
+            type: 'list',
             message: 'What would you like to do?',
             choices: ['View all employees', 'View all employees by department', 'View all employees by manager', 'View all departments', 'View all roles', 'Add an employee', 'Add a role', 'Add a department', 'Remove an employee', 'Remove a department', 'Remove a role', 'Update employee role', 'Update employee manager', 'View salary total of department', 'Exit']
         }
@@ -84,7 +84,7 @@ viewEmployees = () => {
     employee.first_name,
     employee.last_name,
     role.title,
-    department.name,
+    department.deptName,
     role.salary,
     employee.manager_id
     FROM employee
@@ -96,10 +96,46 @@ viewEmployees = () => {
     connection.query(query, (err, res) => {
         if (err) throw err;
         console.table(res);
-        connection.end();
     })
     startApp();
 };
+
+viewEmployeesDept = () => {
+    inquirer.prompt([
+        {
+            name: 'department',
+            type: 'list',
+            message: 'Which department would you like to view the employees of?',
+            choices: ['Sales', 'HR', 'IT']
+        }
+    ]).then((answer) => {
+        switch (answer.department) {
+            case `${answer.department}`:
+                let query = `SELECT
+                    employee.id,
+                    employee.first_name,
+                    employee.last_name,
+                    role.title,
+                    department.deptName,
+                    role.salary,
+                    employee.manager_id
+                    FROM employee
+                    JOIN role
+                    ON employee.role_id = role.id
+                    JOIN department
+                    ON department.id = role.department_id
+                    WHERE department.name = '${answer.department}'
+                    ORDER BY employee.id ASC;`;
+                    connection.query(query, (err, res) => {
+                        if (err) throw err;
+                        console.table(res);
+                    })
+                break;
+            default:
+                break;
+        }
+    })
+}
 
 // view all employees 
 // view all employees by dept
