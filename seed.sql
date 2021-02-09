@@ -4,9 +4,9 @@ VALUES ('Sales'),
 ('IT');
 
 INSERT INTO role (title, salary, department_id)
-VALUES('account executive', 100000,1),
-('coordinator', 75000,2),
-('programmer', 85000,3);
+VALUES('account executive', 100000, 1),
+('coordinator', 75000, 2),
+('programmer', 85000, 3);
 
 INSERT INTO employee (first_name, last_name, role_id)
 VALUES('bob', 'johnson', 1),

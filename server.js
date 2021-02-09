@@ -1,6 +1,7 @@
 const inquirer = require('inquirer');
 const mysql = require('mysql');
 const cTable = require('console.table');
+const path = require('path');
 
 const connection = mysql.createConnection({
     host: 'localhost',
@@ -136,10 +137,60 @@ viewEmployeesDept = () => {
     })
 }
 
-// view all employees 
-// view all employees by dept
-// view all employees by manager
-// view all departments
+viewEmployeesManager = () => {
+    inquirer.prompt([
+        {
+            name: 'manager',
+            type: 'rawlist',
+            message: 'Which department would you like to view the employees of?',
+            choices: ['Sales', 'HR', 'IT']
+        }
+    ]).then((answer) => {
+        switch (answer.department) {
+            case `${answer.department}`:
+                let query = `SELECT
+                    employee.id,
+                    employee.first_name,
+                    employee.last_name,
+                    role.title,
+                    department.deptName,
+                    role.salary,
+                    employee.manager_id
+                    FROM employee
+                    JOIN role
+                    ON employee.role_id = role.id
+                    JOIN department
+                    ON department.id = role.department_id
+                    WHERE department.deptName = '${answer.department}'
+                    ORDER BY employee.id ASC;`;
+                    connection.query(query, (err, res) => {
+                        if (err) throw err;
+                        console.table(res);
+                    })
+                break;
+            default:
+                break;
+        }
+    })
+}
+
+viewDepartments = () => {
+    let query = `SELECT * FROM department ORDER BY id ASC;`;
+    connection.query(query, (err, res) => {
+        if (err) throw err;
+        console.table(res);
+    })
+}
+
+viewRoles = () => {
+    let query = `SELECT id, title FROM role ORDER BY id ASC;`;
+    connection.query(query, (err, res) => {
+        if (err) throw err;
+        console.table(res);
+    })
+}
+
+
 // view all roles
 // add an employee
 // add a role
