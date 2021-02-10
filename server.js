@@ -197,12 +197,16 @@ viewRoles = () => {
 
 
 addEmployee = () => {
-    connection.query(`SELECT CONCAT(first_name, ' ', last_name) as manager FROM employee`, (err, res) => {
+    connection.query(`SELECT * FROM employee`, (err, res) => {
         if (err) throw err;
-        let employees = [];
-        for (var i = 0; i < res.length; i++) {
-            employees.push(res[i].manager);
-        }
+        res.map((employee) => ({
+            name: `${employee.first_name} ${employee.last_name}`,
+            value: employee.id
+        }))
+        // let employees = [];
+        // for (var i = 0; i < res.length; i++) {
+        //     employees.push(res[i].manager);
+        // }
         inquirer.prompt([
             {
                 name: 'firstName',
@@ -242,8 +246,7 @@ addEmployee = () => {
                 last_name: answer.lastName,
                 title: answer.title,
                 salary: answer.salary,
-
-
+                manager_id: answer.manager
             },
             (err, res) => {
                 if (err) throw err;
