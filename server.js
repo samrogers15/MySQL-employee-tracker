@@ -71,7 +71,6 @@ startApp = () => {
                 break;
             case 'Exit':
                 return;
-                break;
             default:
                 break;   
         }
@@ -241,11 +240,14 @@ addEmployee = () => {
             {
                 first_name: answer.firstName,
                 last_name: answer.lastName,
-                
+                title: answer.title,
+                salary: answer.salary,
 
-            }
+
+            },
             (err, res) => {
-
+                if (err) throw err;
+                console.log(`${res.affectedRows} product inserted`);
             })
         })
     })
