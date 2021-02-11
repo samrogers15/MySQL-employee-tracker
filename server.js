@@ -195,18 +195,18 @@ viewRoles = () => {
     })
 };
 
-
 addEmployee = () => {
-    connection.query(`SELECT * FROM employee`, (err, res) => {
+    connection.query(`SELECT CONCAT(first_name, ' ', last_name) as manager FROM employee`, (err, res) => {
         if (err) throw err;
-        res.map((employee) => ({
-            name: `${employee.first_name} ${employee.last_name}`,
-            value: employee.id
-        }))
-        // let employees = [];
-        // for (var i = 0; i < res.length; i++) {
-        //     employees.push(res[i].manager);
-        // }
+        // res.map((employee) => ({
+        //     name: `${employee.first_name} ${employee.last_name}`,
+        //     value: employee.id
+        // }))
+        let managerList = [];
+        for (var i = 0; i < res.length; i++) {
+            managerList.push(res[i].manager);
+        }
+        console.log(managerList);
         inquirer.prompt([
             {
                 name: 'firstName',
@@ -230,28 +230,56 @@ addEmployee = () => {
             },
             {
                 name: 'salary',
-                type: 'input',
+                type: 'number',
                 message: 'What is the new employee\'s salary?'
             },
             {
                 name: 'manager',
                 type: 'rawlist',
                 message: 'Who is the new employee\'s manager?',
-                choices: employees
+                choices: managerList
             }
         ]).then((answer) => {
-            connection.query(`INSERT INTO employee SET ?`,
-            {
-                first_name: answer.firstName,
-                last_name: answer.lastName,
-                title: answer.title,
-                salary: answer.salary,
-                manager_id: answer.manager
-            },
-            (err, res) => {
+            connection.query(`SELECT id FROM employee WHERE CONCAT(first_name, ' ', last_name) = '${answer.manager}'`, (err, res) => {
                 if (err) throw err;
-                console.log(`${res.affectedRows} product inserted`);
-            })
+                console.log(res[0].id);
+                })
+                
+            
+            
+            
+            }
+            console.log(
+                {
+                    first_name: answer.firstName,
+                    last_name: answer.lastName,
+                    title: answer.title,
+                    deptName: answer.dept,
+                    salary: answer.salary,
+                    manager_id: connection.query(`SELECT id FROM employee WHERE CONCAT(first_name, ' ', last_name) = '${answer.manager}'`, (err, res) => {
+                        if (err) throw err;
+                        console.log(res[0].id);
+                    })
+                }
+            )
+            
+            // connection.query(`
+            // BEGIN;
+            // INSERT INTO employee (first_name, last_name, manager_id)
+            //     VALUES (${answer.firstName}, ${answer.lastName}, ${manager_id})
+            // `,
+            // {
+            //     first_name: answer.firstName,
+            //     last_name: answer.lastName,
+            //     title: answer.title,
+            //     deptName: answer.dept,
+            //     salary: answer.salary,
+            //     manager_id: answer.manager
+            // },
+            // (err, res) => {
+            //     if (err) throw err;
+            //     console.log(`${res.affectedRows} product inserted`);
+            // })
         })
     })
 };
