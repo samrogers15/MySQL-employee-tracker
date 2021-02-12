@@ -20,7 +20,7 @@ startApp = () => {
     inquirer.prompt([
         {
             name: 'initialInquiry',
-            type: 'list',
+            type: 'rawlist',
             message: 'Welcome to the employee management program. What would you like to do?',
             choices: ['View all departments', 'View all roles', 'View all employees', 'Add a department', 'Add a role', 'Add an employee', 'Update employee roles', 'Exit program']
         }
@@ -95,14 +95,15 @@ addADepartment = () => {
         },
         (err, res) => {
             if (err) throw err;
-            console.log(`\n ${res.affectedRows} successfully added to database! \n`);
+            console.log(`\n ${response.newDept} successfully added to database! \n`);
+            updateDepartmentList();
             startApp();
         })
     })
 };
 
 addARole = () => {
-    connection.query(`SELECT role.role_id, role.title, role.salary, department.department_name, department.department_id FROM role JOIN department ON role.department_id = department.department_id ORDER BY role.role_id ASC;`, (err, res) => {
+    connection.query(`SELECT department_name, department_id FROM department ORDER BY department_id ASC;`, (err, res) => {
         let departments = res.map(department => ({name: department.department_name, value: department.department_id }));
         let uniqueDepartments = [...new Map(departments.map(name => [JSON.stringify(name), name])).values()];
         inquirer.prompt([
@@ -118,7 +119,7 @@ addARole = () => {
             },
             {
             name: 'deptName',
-            type: 'list',
+            type: 'rawlist',
             message: 'Which department do you want to add the new role to?',
             choices: uniqueDepartments
             },
@@ -128,10 +129,11 @@ addARole = () => {
                 title: response.title,
                 salary: response.salary,
                 department_id: response.deptName,
-            }, 
+            },
             (err, res) => {
                 if (err) throw err;
                 console.log(`\n ${response.title} successfully added to database! \n`);
+                updateRoleList();
                 startApp();
             })
         })
@@ -139,104 +141,110 @@ addARole = () => {
 };
 
 addAnEmployee = () => {
-    connection.query(`SELECT e.employee_id, e.first_name, e.last_name, role.role_id, role.title, role.salary, department.department_name, department.department_id, CONCAT(m.first_name, ' ', m.last_name) manager FROM employee m RIGHT JOIN employee e ON e.manager_id = m.employee_id JOIN role ON e.role_id = role.role_id JOIN department ON department.department_id = role.department_id ORDER BY e.employee_id ASC;`, (err, res) => {
+    connection.query(`SELECT * FROM role;`, (err, res) => {
+        if (err) throw err;
         let roles = res.map(role => ({name: role.title, value: role.role_id }));
-        let uniqueRoles = [...new Map(roles.map(name => [JSON.stringify(name), name])).values()];
-        let departments = res.map(department => ({name: department.department_name, value: department.department_id }));
-        let uniqueDepartments = [...new Map(departments.map(name => [JSON.stringify(name), name])).values()];
-        let employees = res.map(employee => ({name: employee.first_name + ' ' + employee.last_name, value: employee.employee_id }));
-        let uniqueEmployees = [...new Map(employees.map(name => [JSON.stringify(name), name])).values()];
-        inquirer.prompt([
-            {
-                name: 'firstName',
-                type: 'input',
-                message: 'What is the new employee\'s first name?'
-            },
-            {
-                name: 'lastName',
-                type: 'input',
-                message: 'What is the new employee\'s last name?'
-            },
-            {
-                name: 'role',
-                type: 'list',
-                message: 'What is the new employee\'s title?',
-                choices: uniqueRoles
-            },
-            {
-                name: 'dept',
-                type: 'list',
-                message: 'What department is the new employee in?',
-                choices: uniqueDepartments
-            },
-            {
-                name: 'salary',
-                type: 'number',
-                message: 'What is the new employee\'s salary?'
-            },
-            {
-                name: 'manager',
-                type: 'list',
-                message: 'Who is the new employee\'s manager?',
-                choices: employees
-            }
-        ]).then((response) => {
-            connection.query(`INSERT INTO employee SET ?`, 
-            {
-                first_name: response.firstName,
-                last_name: response.lastName,
-                role_id: response.role,
-                manager_id: response.manager,
-            }, 
-            (err, res) => {
+        connection.query(`SELECT * FROM department;`, (err, res) => {
+            if (err) throw err;
+            let departments = res.map(department => ({name: department.department_name, value: department.department_id }));
+            connection.query(`SELECT * FROM employee;`, (err, res) => {
                 if (err) throw err;
-            })
-            connection.query(`INSERT INTO role SET ?`, 
-            {
-                department_id: response.dept,
-            }, 
-            (err, res) => {
-                if (err) throw err;
-                console.log(`\n ${response.firstName} ${response.lastName} successfully added to database! \n`);
-                startApp();
+                let employees = res.map(employee => ({name: employee.first_name + ' ' + employee.last_name, value: employee.employee_id }));
+                inquirer.prompt([
+                    {
+                        name: 'firstName',
+                        type: 'input',
+                        message: 'What is the new employee\'s first name?'
+                    },
+                    {
+                        name: 'lastName',
+                        type: 'input',
+                        message: 'What is the new employee\'s last name?'
+                    },
+                    {
+                        name: 'role',
+                        type: 'rawlist',
+                        message: 'What is the new employee\'s title?',
+                        choices: roles
+                    },
+                    {
+                        name: 'dept',
+                        type: 'rawlist',
+                        message: 'What department is the new employee in?',
+                        choices: departments
+                    },
+                    {
+                        name: 'salary',
+                        type: 'number',
+                        message: 'What is the new employee\'s salary?'
+                    },
+                    {
+                        name: 'manager',
+                        type: 'rawlist',
+                        message: 'Who is the new employee\'s manager?',
+                        choices: employees
+                    }
+                ]).then((response) => {
+                    connection.query(`INSERT INTO employee SET ?`, 
+                    {
+                        first_name: response.firstName,
+                        last_name: response.lastName,
+                        role_id: response.role,
+                        manager_id: response.manager,
+                    }, 
+                    (err, res) => {
+                        if (err) throw err;
+                    })
+                    connection.query(`INSERT INTO role SET ?`, 
+                    {
+                        department_id: response.dept,
+                    }, 
+                    (err, res) => {
+                        if (err) throw err;
+                        console.log(`\n ${response.firstName} ${response.lastName} successfully added to database! \n`);
+                        startApp();
+                    })
+                })
             })
         })
     })
 };
 
 updateEmployeeRole = () => {
-    connection.query(`SELECT e.employee_id, e.first_name, e.last_name, role.role_id, role.title, role.salary, department.department_name, department.department_id, CONCAT(m.first_name, ' ', m.last_name) manager FROM employee m RIGHT JOIN employee e ON e.manager_id = m.employee_id JOIN role ON e.role_id = role.role_id JOIN department ON department.department_id = role.department_id ORDER BY e.employee_id ASC;`, (err, res) => {
+    connection.query(`SELECT * FROM role;`, (err, res) => {
+        if (err) throw err;
         let roles = res.map(role => ({name: role.title, value: role.role_id }));
-        let uniqueRoles = [...new Map(roles.map(name => [JSON.stringify(name), name])).values()];
-        let employees = res.map(employee => ({name: employee.first_name + ' ' + employee.last_name, value: employee.employee_id }));
-        let uniqueEmployees = [...new Map(employees.map(name => [JSON.stringify(name), name])).values()];
-        inquirer.prompt([
-            {
-                name: 'employee',
-                type: 'list',
-                message: 'Which employee would you like to update the role for?',
-                choices: uniqueEmployees
-            },
-            {
-                name: 'newRole',
-                type: 'list',
-                message: 'What should the employee\'s new role be?',
-                choices: uniqueRoles
-            },
-        ]).then((response) => {
-            connection.query(`UPDATE employee SET ? WHERE ?`, 
-            [
+        connection.query(`SELECT * FROM employee;`, (err, res) => {
+            if (err) throw err;
+            let employees = res.map(employee => ({name: employee.first_name + ' ' + employee.last_name, value: employee.employee_id }));
+            inquirer.prompt([
                 {
-                    role_id: response.newRole,
+                    name: 'employee',
+                    type: 'rawlist',
+                    message: 'Which employee would you like to update the role for?',
+                    choices: employees
                 },
                 {
-                    employee_id: response.employee,
+                    name: 'newRole',
+                    type: 'rawlist',
+                    message: 'What should the employee\'s new role be?',
+                    choices: roles
                 },
-            ], 
-            (err, res) => {
-                if (err) throw err;
-                console.log(`\n Successfully updated employee role in the database! \n`);
-                startApp();
+            ]).then((response) => {
+                connection.query(`UPDATE employee SET ? WHERE ?`, 
+                [
+                    {
+                        role_id: response.newRole,
+                    },
+                    {
+                        employee_id: response.employee,
+                    },
+                ], 
+                (err, res) => {
+                    if (err) throw err;
+                    console.log(`\n Successfully updated employee role in the database! \n`);
+                    startApp();
+                })
             })
         })
     })
