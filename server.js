@@ -3,12 +3,6 @@ const mysql = require('mysql');
 const cTable = require('console.table');
 let programIsRunning = true;
 
-/*
-  Since you have a lot of options, it'd be easier to manage them via object lookup
-  rather than a large, unwieldy switch statement. Another advantage of this is you
-  then only have to write the action names in a single place rather than duplicate it
-  in the `choices` array in your `startApp` function
-*/
 const actions = {
   "View all departments": viewAllDepartments,
   "View all roles": viewAllRoles,
@@ -148,12 +142,6 @@ function addAnEmployee() {
         if (err) throw err;
         let employees = res.map(employee => ({ name: employee.first_name + ' ' + employee.last_name, value: employee.employee_id }));
         inquirer.prompt([
-          /*
-            Regardless of your preference of single vs. double quotes in JS, there's no rule
-            that says you can't use both. Even if you prefer single quotes, I would still recommend
-            using double in cases like this where you'd otherwise have to escape characters. IMO, it's
-            easier to read.
-          */
           createPrompt('firstName', 'input', "What is the new employee's first name?"),
           createPrompt('lastName', 'input', "What is the employee's last name?"),
           createPrompt('role', 'rawlist', "What is the employee's title?", roles),
