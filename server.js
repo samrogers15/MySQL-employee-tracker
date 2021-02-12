@@ -1,4 +1,3 @@
-const util = require('util');
 const inquirer = require('inquirer');
 const mysql = require('mysql');
 const cTable = require('console.table');
@@ -13,7 +12,7 @@ const connection = mysql.createConnection({
 
 connection.connect((err) => {
     if (err) throw err;
-    console.log(`Connected as id ${connection.threadId}`);
+    console.log(`Connected as id ${connection.threadId} \n`);
     startApp();
 });
 

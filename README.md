@@ -1,45 +1,87 @@
 # MySQL-employee-tracker
-> TBD.
+> This is a command line application that allows a user to manage information on employees within a company. The application connects to a database housed in MySQL that contains three tables with information on departments, roles, and employees within the company. This Content Management System allows a user to add, view, and modify information about employees of a company.
  
 ## Table of contents
-* [User story](#user-story)
-* [General info](#general-info)
-* [Screenshots](#Screenshots)
+* [User Story](#user-story)
+* [General Info](#general-info)
 * [Technologies](#technologies)
-* [Live Link](#example-html)
+* [Video Example](#video-example)
 * [Code Snippet](#code-snippet)
 * [Sources](#sources)
 * [Contact](#contact)
 
-## User story
+## User Story
 As a business owner
 I want to be able to view and manage the departments, roles, and employees in my company
 So that I can organize and plan my business
 
-## General info
-TBD.
-
-## Screenshots
-![Homepage]()
-![Notes]()
+## General Info
+The database was initialized in MySQL Workbench after the schema files were set up (schema files included in repository). Data for employees was then seeded into the database after initialization. Upon running the program via the command line interface, a user can select to view all departments, view all roles, view all employees, add a department, add a role, add an employee, and update an employee's current role. After executing any of the add or update functions, the database is updated automatically.
 
 ## Technologies
-* HTML
-* CSS
-* JQuery
+* Javascript
 * Node
 * NPM Inquirer
 * NPM MySQL
+* NPM console.table
+* NPM figlet-cli
+* MySQL
 * MySQL Workbench
 
-## Live link
-[Express.js Note Taker Application](https://stormy-beyond-88272.herokuapp.com/)
+## Video Example
+[MySQL Employee Management System]()
 
-## Code snippets
+## Code Snippets
 
-TBD code snippet:
+The below example code shows a function that queries the MySQL database and returns information on all employees when invoked:
 ```js
+viewAllDepartments = () => {
+    connection.query(`SELECT * FROM department ORDER BY department_id ASC;`, (err, res) => {
+        if (err) throw err;
+        console.table('\n', res, '\n');
+        startApp();
+    })
+};
+```
 
+The below example code shows a function that allows a user to add a role into the MySQL database when invoked:
+```js
+addARole = () => {
+    connection.query(`SELECT role.role_id, role.title, role.salary, department.department_name, department.department_id FROM role JOIN department ON role.department_id = department.department_id ORDER BY role.role_id ASC;`, (err, res) => {
+        let departments = res.map(department => ({name: department.department_name, value: department.department_id }));
+        let uniqueDepartments = [...new Map(departments.map(name => [JSON.stringify(name), name])).values()];
+        inquirer.prompt([
+            {
+            name: 'title',
+            type: 'input',
+            message: 'What is the name of the role you want to add?'   
+            },
+            {
+            name: 'salary',
+            type: 'input',
+            message: 'What is the salary of the role you want to add?'   
+            },
+            {
+            name: 'deptName',
+            type: 'list',
+            message: 'Which department do you want to add the new role to?',
+            choices: uniqueDepartments
+            },
+        ]).then((response) => {
+            connection.query(`INSERT INTO role SET ?`, 
+            {
+                title: response.title,
+                salary: response.salary,
+                department_id: response.deptName,
+            }, 
+            (err, res) => {
+                if (err) throw err;
+                console.log(`\n ${response.title} successfully added to database! \n`);
+                startApp();
+            })
+        })
+    })
+};
 ```
 
 ## Sources
@@ -48,6 +90,7 @@ Application enabled using the following sources:
 * [NPM Inquirer](https://github.com/SBoudrias/Inquirer.js/)
 * [NPM MySQL](https://www.npmjs.com/package/mysql)
 * [NPM console.table](https://www.npmjs.com/package/console.table)
+* [NPM figlet-cli](https://www.npmjs.com/package/figlet-cli)
 
 ## Contact
 Created by Sam Rogers - feel free to contact me to collaborate on this project or any other project!
