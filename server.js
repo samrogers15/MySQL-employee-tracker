@@ -22,7 +22,7 @@ startApp = () => {
             name: 'initialInquiry',
             type: 'rawlist',
             message: 'Welcome to the employee management program. What would you like to do?',
-            choices: ['View all departments', 'View all roles', 'View all employees', 'Add a department', 'Add a role', 'Add an employee', 'Update employee roles', 'Exit program']
+            choices: ['View all departments', 'View all roles', 'View all employees', 'View all employees by manager', 'Add a department', 'Add a role', 'Add an employee', 'Update employee\'s role', 'Update employee\'s manager', 'Remove a department', 'Remove a role', 'Remove an employee', 'View total salary of department', 'Exit program']
         }
     ]).then((response) => {
         switch (response.initialInquiry) {
@@ -35,6 +35,9 @@ startApp = () => {
             case 'View all employees':
                 viewAllEmployees();
                 break;
+            case 'View all employees by manager':
+                viewAllEmployeesByManager();
+            break;
             case 'Add a department':
                 addADepartment();
             break;
@@ -44,8 +47,23 @@ startApp = () => {
             case 'Add an employee':
                 addAnEmployee();
             break;
-            case 'Update employee roles':
+            case 'Update employee\'s role':
                 updateEmployeeRole();
+            break;
+            case 'Update employee\'s manager':
+                updateEmployeesManager();
+            break;
+            case 'Remove a department':
+                removeADepartment();
+            break;
+            case 'Remove a role':
+                removeARole();
+            break;
+            case 'Remove an employee':
+                removeAnEmployee();
+            break;
+            case 'View total salary of department':
+                viewDepartmentSalary();
             break;
             case 'Exit program':
                 connection.end();
@@ -81,6 +99,29 @@ viewAllEmployees = () => {
     })
 };
 
+viewAllEmployeesByManager = () => {
+    connection.query(`SELECT employee_id, first_name, last_name FROM employee ORDER BY employee_id ASC;`, (err, res) => {
+        if (err) throw err;
+        let managers = res.map(employee => ({name: employee.first_name + ' ' + employee.last_name, value: employee.employee_id }));
+        console.log(managers);
+        inquirer.prompt([
+            {
+            name: 'manager',
+            type: 'rawlist',
+            message: 'Which manager would you like to see the employee\'s of?',
+            choices: managers   
+            },
+        ]).then((response) => {
+            connection.query(`SELECT e.employee_id, e.first_name, e.last_name, role.title, department.department_name, role.salary, CONCAT(m.first_name, ' ', m.last_name) manager FROM employee m RIGHT JOIN employee e ON e.manager_id = m.employee_id JOIN role ON e.role_id = role.role_id JOIN department ON department.department_id = role.department_id WHERE e.manager_id = ${response.manager} ORDER BY e.employee_id ASC`, 
+            (err, res) => {
+                if (err) throw err;
+                console.table('\n', res, '\n');
+                startApp();
+            })
+        })
+    })
+}
+
 addADepartment = () => {
     inquirer.prompt([
         {
@@ -103,6 +144,7 @@ addADepartment = () => {
 
 addARole = () => {
     connection.query(`SELECT * FROM department;`, (err, res) => {
+        if (err) throw err;
         let departments = res.map(department => ({name: department.department_name, value: department.department_id }));
         inquirer.prompt([
             {
@@ -141,66 +183,51 @@ addAnEmployee = () => {
     connection.query(`SELECT * FROM role;`, (err, res) => {
         if (err) throw err;
         let roles = res.map(role => ({name: role.title, value: role.role_id }));
-        connection.query(`SELECT * FROM department;`, (err, res) => {
+        connection.query(`SELECT * FROM employee;`, (err, res) => {
             if (err) throw err;
-            let departments = res.map(department => ({name: department.department_name, value: department.department_id }));
-            connection.query(`SELECT * FROM employee;`, (err, res) => {
-                if (err) throw err;
-                let employees = res.map(employee => ({name: employee.first_name + ' ' + employee.last_name, value: employee.employee_id }));
-                inquirer.prompt([
-                    {
-                        name: 'firstName',
-                        type: 'input',
-                        message: 'What is the new employee\'s first name?'
-                    },
-                    {
-                        name: 'lastName',
-                        type: 'input',
-                        message: 'What is the new employee\'s last name?'
-                    },
-                    {
-                        name: 'role',
-                        type: 'rawlist',
-                        message: 'What is the new employee\'s title?',
-                        choices: roles
-                    },
-                    {
-                        name: 'dept',
-                        type: 'rawlist',
-                        message: 'What department is the new employee in?',
-                        choices: departments
-                    },
-                    {
-                        name: 'salary',
-                        type: 'number',
-                        message: 'What is the new employee\'s salary?'
-                    },
-                    {
-                        name: 'manager',
-                        type: 'rawlist',
-                        message: 'Who is the new employee\'s manager?',
-                        choices: employees
-                    }
-                ]).then((response) => {
-                    connection.query(`INSERT INTO employee SET ?`, 
-                    {
-                        first_name: response.firstName,
-                        last_name: response.lastName,
-                        role_id: response.role,
-                        manager_id: response.manager,
-                    }, 
-                    (err, res) => {
-                        if (err) throw err;
-                    })
-                    connection.query(`INSERT INTO role SET ?`, 
-                    {
-                        department_id: response.dept,
-                    }, 
-                    (err, res) => {
-                        if (err) throw err;
-                        console.log(`\n ${response.firstName} ${response.lastName} successfully added to database! \n`);
-                        startApp();
-                    })
+            let employees = res.map(employee => ({name: employee.first_name + ' ' + employee.last_name, value: employee.employee_id }));
+            inquirer.prompt([
+                {
+                    name: 'firstName',
+                    type: 'input',
+                    message: 'What is the new employee\'s first name?'
+                },
+                {
+                    name: 'lastName',
+                    type: 'input',
+                    message: 'What is the new employee\'s last name?'
+                },
+                {
+                    name: 'role',
+                    type: 'rawlist',
+                    message: 'What is the new employee\'s title?',
+                    choices: roles
+                },
+                {
+                    name: 'manager',
+                    type: 'rawlist',
+                    message: 'Who is the new employee\'s manager?',
+                    choices: employees
+                }
+            ]).then((response) => {
+                connection.query(`INSERT INTO employee SET ?`, 
+                {
+                    first_name: response.firstName,
+                    last_name: response.lastName,
+                    role_id: response.role,
+                    manager_id: response.manager,
+                }, 
+                (err, res) => {
+                    if (err) throw err;
+                })
+                connection.query(`INSERT INTO role SET ?`, 
+                {
+                    department_id: response.dept,
+                }, 
+                (err, res) => {
+                    if (err) throw err;
+                    console.log(`\n ${response.firstName} ${response.lastName} successfully added to database! \n`);
+                    startApp();
                 })
             })
         })
@@ -246,3 +273,39 @@ updateEmployeeRole = () => {
         })
     })
 }
+
+updateEmployeesManager = () => {
+    connection.query(`SELECT * FROM employee;`, (err, res) => {
+        if (err) throw err;
+        let employees = res.map(employee => ({name: employee.first_name + ' ' + employee.last_name, value: employee.employee_id }));
+        inquirer.prompt([
+            {
+                name: 'employee',
+                type: 'rawlist',
+                message: 'Which employee would you like to update the manager for?',
+                choices: employees
+            },
+            {
+                name: 'newManager',
+                type: 'rawlist',
+                message: 'Who should the employee\'s new manager be?',
+                choices: employees
+            },
+        ]).then((response) => {
+            connection.query(`UPDATE employee SET ? WHERE ?`, 
+            [
+                {
+                    manager_id: response.newManager,
+                },
+                {
+                    employee_id: response.employee,
+                },
+            ], 
+            (err, res) => {
+                if (err) throw err;
+                console.log(`\n Successfully updated employee manager in the database! \n`);
+                startApp();
+            })
+        })
+    })
+};
