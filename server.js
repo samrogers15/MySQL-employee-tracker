@@ -104,7 +104,6 @@ addADepartment = () => {
 addARole = () => {
     connection.query(`SELECT * FROM department;`, (err, res) => {
         let departments = res.map(department => ({name: department.department_name, value: department.department_id }));
-        console.log(departments);
         inquirer.prompt([
             {
             name: 'title',

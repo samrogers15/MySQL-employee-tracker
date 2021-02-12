@@ -48,7 +48,6 @@ The below example code shows a function that allows a user to add a role into th
 addARole = () => {
     connection.query(`SELECT * FROM department;`, (err, res) => {
         let departments = res.map(department => ({name: department.department_name, value: department.department_id }));
-        console.log(departments);
         inquirer.prompt([
             {
             name: 'title',
