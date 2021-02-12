@@ -11,8 +11,6 @@ const connection = mysql.createConnection({
     database: 'employeeTrackerDB',
 });
 
-// connection.query = util.promisify(connection.query);
-
 connection.connect((err) => {
     if (err) throw err;
     console.log(`Connected as id ${connection.threadId}`);
@@ -52,7 +50,7 @@ startApp = () => {
             break;
             case 'Exit program':
                 connection.end();
-                console.log('You have exited the employee management program');
+                console.log('\n You have exited the employee management program \n');
                 return;
             default:
                 break;
@@ -134,7 +132,7 @@ addARole = () => {
             }, 
             (err, res) => {
                 if (err) throw err;
-                console.log(`${response.title} successfully added to database!`);
+                console.log(`\n ${response.title} successfully added to database! \n`);
                 startApp();
             })
         })
@@ -193,7 +191,14 @@ addAnEmployee = () => {
             }, 
             (err, res) => {
                 if (err) throw err;
-                console.log(`${response.firsName} ${response.lastName} successfully added to database!`);
+            })
+            connection.query(`INSERT INTO role SET ?`, 
+            {
+                department_id: response.dept,
+            }, 
+            (err, res) => {
+                if (err) throw err;
+                console.log(`\n ${response.firstName} ${response.lastName} successfully added to database! \n`);
                 startApp();
             })
         })
