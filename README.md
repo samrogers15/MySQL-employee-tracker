@@ -24,7 +24,6 @@ The database was initialized in MySQL Workbench after the schema files were set 
 * NPM Inquirer
 * NPM MySQL
 * NPM console.table
-* NPM figlet-cli
 * MySQL
 * MySQL Workbench
 
@@ -90,7 +89,6 @@ Application enabled using the following sources:
 * [NPM Inquirer](https://github.com/SBoudrias/Inquirer.js/)
 * [NPM MySQL](https://www.npmjs.com/package/mysql)
 * [NPM console.table](https://www.npmjs.com/package/console.table)
-* [NPM figlet-cli](https://www.npmjs.com/package/figlet-cli)
 
 ## Contact
 Created by Sam Rogers - feel free to contact me to collaborate on this project or any other project!
