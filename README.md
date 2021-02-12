@@ -47,9 +47,9 @@ viewAllDepartments = () => {
 The below example code shows a function that allows a user to add a role into the MySQL database when invoked:
 ```js
 addARole = () => {
-    connection.query(`SELECT role.role_id, role.title, role.salary, department.department_name, department.department_id FROM role JOIN department ON role.department_id = department.department_id ORDER BY role.role_id ASC;`, (err, res) => {
+    connection.query(`SELECT * FROM department;`, (err, res) => {
         let departments = res.map(department => ({name: department.department_name, value: department.department_id }));
-        let uniqueDepartments = [...new Map(departments.map(name => [JSON.stringify(name), name])).values()];
+        console.log(departments);
         inquirer.prompt([
             {
             name: 'title',
@@ -63,9 +63,9 @@ addARole = () => {
             },
             {
             name: 'deptName',
-            type: 'list',
+            type: 'rawlist',
             message: 'Which department do you want to add the new role to?',
-            choices: uniqueDepartments
+            choices: departments
             },
         ]).then((response) => {
             connection.query(`INSERT INTO role SET ?`, 
@@ -73,7 +73,7 @@ addARole = () => {
                 title: response.title,
                 salary: response.salary,
                 department_id: response.deptName,
-            }, 
+            },
             (err, res) => {
                 if (err) throw err;
                 console.log(`\n ${response.title} successfully added to database! \n`);

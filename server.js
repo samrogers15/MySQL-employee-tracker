@@ -96,16 +96,15 @@ addADepartment = () => {
         (err, res) => {
             if (err) throw err;
             console.log(`\n ${response.newDept} successfully added to database! \n`);
-            updateDepartmentList();
             startApp();
         })
     })
 };
 
 addARole = () => {
-    connection.query(`SELECT department_name, department_id FROM department ORDER BY department_id ASC;`, (err, res) => {
+    connection.query(`SELECT * FROM department;`, (err, res) => {
         let departments = res.map(department => ({name: department.department_name, value: department.department_id }));
-        let uniqueDepartments = [...new Map(departments.map(name => [JSON.stringify(name), name])).values()];
+        console.log(departments);
         inquirer.prompt([
             {
             name: 'title',
@@ -121,7 +120,7 @@ addARole = () => {
             name: 'deptName',
             type: 'rawlist',
             message: 'Which department do you want to add the new role to?',
-            choices: uniqueDepartments
+            choices: departments
             },
         ]).then((response) => {
             connection.query(`INSERT INTO role SET ?`, 
@@ -133,7 +132,6 @@ addARole = () => {
             (err, res) => {
                 if (err) throw err;
                 console.log(`\n ${response.title} successfully added to database! \n`);
-                updateRoleList();
                 startApp();
             })
         })
