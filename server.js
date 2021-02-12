@@ -390,3 +390,31 @@ removeAnEmployee = () => {
         })
     })
 }
+
+viewDepartmentSalary = () => {
+    connection.query(`SELECT * FROM department ORDER BY department_id ASC;`, (err, res) => {
+        if (err) throw err;
+        let departments = res.map(department => ({name: department.department_name, value: department.department_id }));
+        inquirer.prompt([
+            {
+            name: 'deptName',
+            type: 'rawlist',
+            message: 'Which department would you like to view the total salaries of?',
+            choices: departments
+            },
+        ]).then((response) => {
+            connection.query(`SELECT SUM(salary) FROM role WHERE ?`, 
+            [
+                {
+                    department_id: response.deptName,
+                },
+            ], 
+            (err, res) => {
+                if (err) throw err;
+                console.log(res);
+                console.log('\n The total utilized salary budget of the selected department is $', JSON.stringify(res[0]), '. \n');
+                startApp();
+            })
+        })
+    })
+}
