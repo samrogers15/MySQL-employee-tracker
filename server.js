@@ -50,7 +50,7 @@ startApp = () => {
             break;
             case 'Exit program':
                 connection.end();
-                console.log('\n You have exited the employee management program \n');
+                console.log('\n You have exited the employee management program. Thanks for using! \n');
                 return;
             default:
                 break;
@@ -204,3 +204,41 @@ addAnEmployee = () => {
         })
     })
 };
+
+updateEmployeeRole = () => {
+    connection.query(`SELECT e.employee_id, e.first_name, e.last_name, role.role_id, role.title, role.salary, department.department_name, department.department_id, CONCAT(m.first_name, ' ', m.last_name) manager FROM employee m RIGHT JOIN employee e ON e.manager_id = m.employee_id JOIN role ON e.role_id = role.role_id JOIN department ON department.department_id = role.department_id ORDER BY e.employee_id ASC;`, (err, res) => {
+        let roles = res.map(role => ({name: role.title, value: role.role_id }));
+        let uniqueRoles = [...new Map(roles.map(name => [JSON.stringify(name), name])).values()];
+        let employees = res.map(employee => ({name: employee.first_name + ' ' + employee.last_name, value: employee.employee_id }));
+        let uniqueEmployees = [...new Map(employees.map(name => [JSON.stringify(name), name])).values()];
+        inquirer.prompt([
+            {
+                name: 'employee',
+                type: 'list',
+                message: 'Which employee would you like to update the role for?',
+                choices: uniqueEmployees
+            },
+            {
+                name: 'newRole',
+                type: 'list',
+                message: 'What should the employee\'s new role be?',
+                choices: uniqueRoles
+            },
+        ]).then((response) => {
+            connection.query(`UPDATE employee SET ? WHERE ?`, 
+            [
+                {
+                    role_id: response.newRole,
+                },
+                {
+                    employee_id: response.employee,
+                },
+            ], 
+            (err, res) => {
+                if (err) throw err;
+                console.log(`\n Successfully updated employee role in the database! \n`);
+                startApp();
+            })
+        })
+    })
+}
