@@ -1,7 +1,7 @@
+const util = require('util');
 const inquirer = require('inquirer');
 const mysql = require('mysql');
 const cTable = require('console.table');
-const path = require('path');
 
 const connection = mysql.createConnection({
     host: 'localhost',
@@ -10,6 +10,8 @@ const connection = mysql.createConnection({
     password: '',
     database: 'employeeTrackerDB',
 });
+
+// connection.query = util.promisify(connection.query);
 
 connection.connect((err) => {
     if (err) throw err;
@@ -21,192 +23,132 @@ startApp = () => {
     inquirer.prompt([
         {
             name: 'initialInquiry',
-            type: 'rawlist',
-            message: 'What would you like to do?',
-            choices: ['View all employees', 'View all employees by department', 'View all employees by manager', 'View all departments', 'View all roles', 'Add an employee', 'Add a role', 'Add a department', 'Remove an employee', 'Remove a department', 'Remove a role', 'Update employee role', 'Update employee manager', 'View salary total of department', 'Exit']
+            type: 'list',
+            message: 'Welcome to the employee management program. What would you like to do?',
+            choices: ['View all departments', 'View all roles', 'View all employees', 'Add a department', 'Add a role', 'Add an employee', 'Update employee roles', 'Exit program']
         }
-    ]).then((answer) => {
-        switch (answer.initialInquiry) {
-            case 'View all employees':
-                viewEmployees();
-                break;
-            case 'View all employees by department':
-                viewEmployeesDept();
-                break;
-            case 'View all employees by manager':
-                viewEmployeesManager();
-                break;
+    ]).then((response) => {
+        switch (response.initialInquiry) {
             case 'View all departments':
-                viewDepartments();
+                viewAllDepartments();    
                 break;
             case 'View all roles':
-                viewRoles();
+                viewAllRoles();
                 break;
-            case 'Add an employee':
-                addEmployee();
-                break;
-            case 'Add a role':
-                addRole();
+            case 'View all employees':
+                viewAllEmployees();
                 break;
             case 'Add a department':
-                addDept();
-                break;
-            case 'Remove an employee':
-                removeEmployee();
-                break;
-            case 'Remove a department':
-                removeDept();
-                break;
-            case 'Remove a role':
-                removeRole();
-                break;
-            case 'Update employee role':
-                updateRole();
-                break;
-            case 'Update employee manager':
-                updateManager();
-                break;
-            case 'View salary total of department':
-                viewSalaryTotal();
-                break;
-            case 'Exit':
+                addADepartment();
+            break;
+            case 'Add a role':
+                addARole();
+            break;
+            case 'Add an employee':
+                addAnEmployee();
+            break;
+            case 'Update employee roles':
+                updateEmployeeRole();
+            break;
+            case 'Exit program':
+                connection.end();
+                console.log('You have exited the employee management program');
                 return;
             default:
-                break;   
+                break;
         }
+    })
+}
+
+viewAllDepartments = () => {
+    connection.query(`SELECT * FROM department ORDER BY department_id ASC;`, (err, res) => {
+        if (err) throw err;
+        console.table('\n', res, '\n');
+        startApp();
     })
 };
 
-viewEmployees = () => {
-    let query = `SELECT
-    employee.id,
-    employee.first_name,
-    employee.last_name,
-    role.title,
-    department.deptName,
-    role.salary,
-    employee.manager_id
-    FROM employee
-    JOIN role
-    ON employee.role_id = role.id
-    JOIN department
-    ON department.id = role.department_id
-    ORDER BY employee.id ASC;`;
-    connection.query(query, (err, res) => {
+viewAllRoles = () => {
+    connection.query(`SELECT role.role_id, role.title, role.salary, department.department_name, department.department_id FROM role JOIN department ON role.department_id = department.department_id ORDER BY role.role_id ASC;`, (err, res) => {
         if (err) throw err;
-        console.table(res);
+        console.table('\n', res, '\n');
+        startApp();
     })
 };
 
-viewEmployeesDept = () => {
-    connection.query(`SELECT deptName FROM department`, (err, res) => {
+viewAllEmployees = () => {
+    connection.query(`SELECT e.employee_id, e.first_name, e.last_name, role.title, department.department_name, role.salary, CONCAT(m.first_name, ' ', m.last_name) manager FROM employee m RIGHT JOIN employee e ON e.manager_id = m.employee_id JOIN role ON e.role_id = role.role_id JOIN department ON department.department_id = role.department_id ORDER BY e.employee_id ASC;`, (err, res) => {
         if (err) throw err;
-        let departments = [];
-        for (var i = 0; i < res.length; i++) {
-            departments.push(res[i].deptName);
+        console.table('\n', res, '\n');
+        startApp();
+    })
+};
+
+addADepartment = () => {
+    inquirer.prompt([
+        {
+        name: 'newDept',
+        type: 'input',
+        message: 'What is the name of the department you want to add?'   
         }
-        inquirer.prompt([
-            {
-                name: 'department',
-                type: 'rawlist',
-                message: 'Which department would you like to view the employees of?',
-                choices: departments
-            }
-        ]).then((answer) => {
-            switch (answer.department) {
-                case `${answer.department}`:
-                    let query = `SELECT
-                        employee.id,
-                        employee.first_name,
-                        employee.last_name,
-                        role.title,
-                        department.deptName,
-                        role.salary,
-                        employee.manager_id
-                        FROM employee
-                        JOIN role
-                        ON employee.role_id = role.id
-                        JOIN department
-                        ON department.id = role.department_id
-                        WHERE department.deptName = '${answer.department}'
-                        ORDER BY employee.id ASC;`;
-                        connection.query(query, (err, res) => {
-                            if (err) throw err;
-                            console.table(res);
-                        })
-                    break;
-                default:
-                    break;
-            }
+    ]).then((response) => {
+        connection.query(`INSERT INTO department SET ?`, 
+        {
+            department_name: response.newDept,
+        },
+        (err, res) => {
+            if (err) throw err;
+            console.log(`\n ${res.affectedRows} successfully added to database! \n`);
+            startApp();
         })
     })
 };
 
-viewEmployeesManager = () => {
-    inquirer.prompt([
-        {
-            name: 'manager',
-            type: 'rawlist',
-            message: 'Which department would you like to view the employees of?',
-            choices: ['Sales', 'HR', 'IT']
-        }
-    ]).then((answer) => {
-        switch (answer.department) {
-            case `${answer.department}`:
-                let query = `SELECT
-                    employee.id,
-                    employee.first_name,
-                    employee.last_name,
-                    role.title,
-                    department.deptName,
-                    role.salary,
-                    employee.manager_id
-                    FROM employee
-                    JOIN role
-                    ON employee.role_id = role.id
-                    JOIN department
-                    ON department.id = role.department_id
-                    WHERE department.deptName = '${answer.department}'
-                    ORDER BY employee.id ASC;`;
-                    connection.query(query, (err, res) => {
-                        if (err) throw err;
-                        console.table(res);
-                    })
-                break;
-            default:
-                break;
-        }
+addARole = () => {
+    connection.query(`SELECT role.role_id, role.title, role.salary, department.department_name, department.department_id FROM role JOIN department ON role.department_id = department.department_id ORDER BY role.role_id ASC;`, (err, res) => {
+        let departments = res.map(department => ({name: department.department_name, value: department.department_id }));
+        let uniqueDepartments = [...new Map(departments.map(name => [JSON.stringify(name), name])).values()];
+        inquirer.prompt([
+            {
+            name: 'title',
+            type: 'input',
+            message: 'What is the name of the role you want to add?'   
+            },
+            {
+            name: 'salary',
+            type: 'input',
+            message: 'What is the salary of the role you want to add?'   
+            },
+            {
+            name: 'deptName',
+            type: 'list',
+            message: 'Which department do you want to add the new role to?',
+            choices: uniqueDepartments
+            },
+        ]).then((response) => {
+            connection.query(`INSERT INTO role SET ?`, 
+            {
+                title: response.title,
+                salary: response.salary,
+                department_id: response.deptName,
+            }, 
+            (err, res) => {
+                if (err) throw err;
+                console.log(`${response.title} successfully added to database!`);
+                startApp();
+            })
+        })
     })
 };
 
-viewDepartments = () => {
-    let query = `SELECT * FROM department ORDER BY id ASC;`;
-    connection.query(query, (err, res) => {
-        if (err) throw err;
-        console.table(res);
-    })
-};
-
-viewRoles = () => {
-    let query = `SELECT id, title FROM role ORDER BY id ASC;`;
-    connection.query(query, (err, res) => {
-        if (err) throw err;
-        console.table(res);
-    })
-};
-
-addEmployee = () => {
-    connection.query(`SELECT CONCAT(first_name, ' ', last_name) as manager FROM employee`, (err, res) => {
-        if (err) throw err;
-        // res.map((employee) => ({
-        //     name: `${employee.first_name} ${employee.last_name}`,
-        //     value: employee.id
-        // }))
-        let managerList = [];
-        for (var i = 0; i < res.length; i++) {
-            managerList.push(res[i].manager);
-        }
-        console.log(managerList);
+addAnEmployee = () => {
+    connection.query(`SELECT e.employee_id, e.first_name, e.last_name, role.role_id, role.title, role.salary, department.department_name, department.department_id, CONCAT(m.first_name, ' ', m.last_name) manager FROM employee m RIGHT JOIN employee e ON e.manager_id = m.employee_id JOIN role ON e.role_id = role.role_id JOIN department ON department.department_id = role.department_id ORDER BY e.employee_id ASC;`, (err, res) => {
+        let roles = res.map(role => ({name: role.title, value: role.role_id }));
+        let uniqueRoles = [...new Map(roles.map(name => [JSON.stringify(name), name])).values()];
+        let departments = res.map(department => ({name: department.department_name, value: department.department_id }));
+        let uniqueDepartments = [...new Map(departments.map(name => [JSON.stringify(name), name])).values()];
+        let employees = res.map(employee => ({name: employee.first_name + ' ' + employee.last_name, value: employee.employee_id }));
+        let uniqueEmployees = [...new Map(employees.map(name => [JSON.stringify(name), name])).values()];
         inquirer.prompt([
             {
                 name: 'firstName',
@@ -219,14 +161,16 @@ addEmployee = () => {
                 message: 'What is the new employee\'s last name?'
             },
             {
-                name: 'title',
-                type: 'input',
-                message: 'What is the new employee\'s title?'
+                name: 'role',
+                type: 'list',
+                message: 'What is the new employee\'s title?',
+                choices: uniqueRoles
             },
             {
                 name: 'dept',
-                type: 'input',
-                message: 'What department is the new employee in?'
+                type: 'list',
+                message: 'What department is the new employee in?',
+                choices: uniqueDepartments
             },
             {
                 name: 'salary',
@@ -235,61 +179,23 @@ addEmployee = () => {
             },
             {
                 name: 'manager',
-                type: 'rawlist',
+                type: 'list',
                 message: 'Who is the new employee\'s manager?',
-                choices: managerList
+                choices: employees
             }
-        ]).then((answer) => {
-            connection.query(`SELECT id FROM employee WHERE CONCAT(first_name, ' ', last_name) = '${answer.manager}'`, (err, res) => {
+        ]).then((response) => {
+            connection.query(`INSERT INTO employee SET ?`, 
+            {
+                first_name: response.firstName,
+                last_name: response.lastName,
+                role_id: response.role,
+                manager_id: response.manager,
+            }, 
+            (err, res) => {
                 if (err) throw err;
-                console.log(res[0].id);
-                })
-                
-            
-            
-            
-            }
-            console.log(
-                {
-                    first_name: answer.firstName,
-                    last_name: answer.lastName,
-                    title: answer.title,
-                    deptName: answer.dept,
-                    salary: answer.salary,
-                    manager_id: connection.query(`SELECT id FROM employee WHERE CONCAT(first_name, ' ', last_name) = '${answer.manager}'`, (err, res) => {
-                        if (err) throw err;
-                        console.log(res[0].id);
-                    })
-                }
-            )
-            
-            // connection.query(`
-            // BEGIN;
-            // INSERT INTO employee (first_name, last_name, manager_id)
-            //     VALUES (${answer.firstName}, ${answer.lastName}, ${manager_id})
-            // `,
-            // {
-            //     first_name: answer.firstName,
-            //     last_name: answer.lastName,
-            //     title: answer.title,
-            //     deptName: answer.dept,
-            //     salary: answer.salary,
-            //     manager_id: answer.manager
-            // },
-            // (err, res) => {
-            //     if (err) throw err;
-            //     console.log(`${res.affectedRows} product inserted`);
-            // })
+                console.log(`${response.firsName} ${response.lastName} successfully added to database!`);
+                startApp();
+            })
         })
     })
 };
-// first name, last name, title, deptName, salary, manager
-// add an employee
-// add a role
-// add a dept
-// remove an employee
-// remove a department
-// remove a role
-// Update employee role
-// Update employee manager
-// View salary total of department

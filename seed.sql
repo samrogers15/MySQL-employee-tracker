@@ -39,6 +39,5 @@ VALUES
 ('Dom', 'Chewer', 5, 7),
 ('Mary', 'Bronson', 7, 5),
 ('Sarah', 'Robbie', 8, 5),
-('Frank', 'Dodson', 8, 5),
 ('Jeb', 'Johnnygriff', 10, 6),
 ('Barton', 'Heathcliffscruff', 11, 6);
