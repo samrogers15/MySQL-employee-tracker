@@ -82,6 +82,36 @@ addARole = () => {
 };
 ```
 
+The below example code shows a function that allows a user to remove an employee from the MySQL database when invoked:
+```js
+removeAnEmployee = () => {
+    connection.query(`SELECT * FROM employee ORDER BY employee_id ASC;`, (err, res) => {
+        if (err) throw err;
+        let employees = res.map(employee => ({name: employee.first_name + ' ' + employee.last_name, value: employee.employee_id }));
+        inquirer.prompt([
+            {
+                name: 'employee',
+                type: 'rawlist',
+                message: 'Which employee would you like to remove?',
+                choices: employees
+            },
+        ]).then((response) => {
+            connection.query(`DELETE FROM employee WHERE ?`, 
+            [
+                {
+                    employee_id: response.employee,
+                },
+            ], 
+            (err, res) => {
+                if (err) throw err;
+                console.log(`\n Successfully removed the employee from the database! \n`);
+                startApp();
+            })
+        })
+    })
+}
+```
+
 ## Sources
 Application enabled using the following sources:
 
