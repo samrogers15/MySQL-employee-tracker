@@ -403,7 +403,7 @@ viewDepartmentSalary = () => {
             choices: departments
             },
         ]).then((response) => {
-            connection.query(`SELECT SUM(salary) FROM role WHERE ?`, 
+            connection.query(`SELECT department_id, SUM(role.salary) AS total_salary FROM role WHERE ?`, 
             [
                 {
                     department_id: response.deptName,
@@ -411,8 +411,8 @@ viewDepartmentSalary = () => {
             ], 
             (err, res) => {
                 if (err) throw err;
-                console.log(res);
-                console.log('\n The total utilized salary budget of the selected department is $', JSON.stringify(res[0]), '. \n');
+                console.log(`\n The total utilized salary budget of the ${response.deptName} department is $ \n`);
+                console.table('\n', res, '\n');
                 startApp();
             })
         })
