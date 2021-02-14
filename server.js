@@ -103,7 +103,6 @@ viewAllEmployeesByManager = () => {
     connection.query(`SELECT employee_id, first_name, last_name FROM employee ORDER BY employee_id ASC;`, (err, res) => {
         if (err) throw err;
         let managers = res.map(employee => ({name: employee.first_name + ' ' + employee.last_name, value: employee.employee_id }));
-        console.log(managers);
         inquirer.prompt([
             {
             name: 'manager',
