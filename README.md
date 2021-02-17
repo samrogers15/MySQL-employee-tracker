@@ -28,7 +28,7 @@ The database was initialized in MySQL Workbench after the schema files were set 
 * MySQL Workbench
 
 ## Video Example
-[MySQL Employee Management System]()
+[MySQL Employee Management System](https://drive.google.com/file/d/1_20AT6cerIgXbkMycODh86IQtiO5k_qQ/view)
 
 ## Code Snippets
 
